@@ -3,11 +3,11 @@
 const client = require('../db-client');
 
 client.query(`
-    CREATE TABLE IF EXISTS books (
+    CREATE TABLE IF NOT EXISTS books (
         id SERIAL PRIMARY KEY,
         author VARCHAR(256),
         title VARCHAR(256),
-        isbn INTEGER,
+        isbn VARCHAR(256),
         image_url VARCHAR,
         description VARCHAR
     );
