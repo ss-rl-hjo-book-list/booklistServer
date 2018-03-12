@@ -1,0 +1,27 @@
+{
+  "name": "booklistserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ss-rl-hjo-book-list/booklistServer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ss-rl-hjo-book-list/booklistServer/issues"
+  },
+  "homepage": "https://github.com/ss-rl-hjo-book-list/booklistServer#readme",
+  "dependencies": {
+    "cors": "^2.8.4",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3",
+    "morgan": "^1.9.0",
+    "nodemon": "^1.17.1",
+    "pg": "^7.4.1"
+  }
+}
