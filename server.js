@@ -18,3 +18,11 @@ app.use(express.urlencoded({extended: true}));
 
 const client = require('./db-client');
 
+
+app.get('/test', (request, response) => {
+    response.send('It works!');
+});
+
+app.listen(PORT, () => {
+    console.log('Server running on port', PORT);
+});
