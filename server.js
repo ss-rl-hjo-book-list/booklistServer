@@ -19,8 +19,16 @@ app.use(express.urlencoded({extended: true}));
 const client = require('./db-client');
 
 
-app.get('/test', (request, response) => {
-    response.send('It works!');
+app.get('/api/v1/books', (request, response) => {
+    client.query(`
+    SELECT id, title, author, image_url FROM books;
+    `)
+        .then(results => response.send(results.rows))
+        .catch(error => {
+            console.error(error);
+            response.sendStatus(500);
+        });
+    
 });
 
 app.listen(PORT, () => {
