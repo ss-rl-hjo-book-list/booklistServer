@@ -1,19 +1,19 @@
 'use strict';
 
 const client = require('../db-client');
+const books = require('./books.json');
 
-client.query(`
-    CREATE TABLE IF EXISTS books (
-        id SERIAL PRIMARY KEY,
-        author VARCHAR(256),
-        title VARCHAR(256),
-        isbn INTEGER,
-        image_url VARCHAR,
-        description VARCHAR
-    );
-`)
+Promise.all(books.map(book => {
+    return client.query(`
+        INSERT INTO books (author, title, isbn, image_url, description)
+        VALUES ($1, $2, $3, $4, $5);
+    `,
+    [
+        book.author, book.title, book.isbn, book.image_url, book.description
+    ]);
+}))
     .then(
-        () => console.log('Table creation successful'),
+        () => console.log('Seeding data successful'),
         err => console.error(err)
     )
     .then(() => client.end());
