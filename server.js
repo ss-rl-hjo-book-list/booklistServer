@@ -65,6 +65,45 @@ app.post('/api/v1/books', (request, response) => {
         });
 });
 
+app.put('/api/books/:id', (request, response, next) => {
+    const body = request.body;
+
+    client.query(`
+        UPDATE books
+        SET title=$1,
+            author=$2,
+            image_url=$3,
+            description=$4,
+            isbn=$5
+        WHERE id=$6
+        RETURNING id, title, author, image_url, description, isbn;
+    `,
+    [
+        body.title,
+        body.author,
+        body.image_url,
+        body.description,
+        body.isbn,
+        body.id
+    ]
+    )
+        .then(result => response.send(result.rows[0]))
+        .catch(next);
+});
+
+app.delete('/api/v1/books/:id', (request, response, next) => {
+    const id = request.params.id;
+
+    client.query(`
+        DELETE FROM books
+        WHERE id=$1;
+    `,
+    [id]
+    )
+        .then(result => response.send({ removed: result.rowCount !== 0 }))
+        .catch(next);
+});
+
 
 app.listen(PORT, () => {
     console.log('Server running on port', PORT);
