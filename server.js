@@ -40,7 +40,7 @@ app.get('/api/v1/books/:id', (request, response) => {
     `,
     [id])
         .then(results => {
-            if (results.rows.length === 0) response.sendStatus(404); 
+            if (results.rows.length === 0) response.sendStatus(404);
             else response.send(results.rows[0]);
         })
         .catch(error => {
@@ -48,6 +48,21 @@ app.get('/api/v1/books/:id', (request, response) => {
             response.sendStatus(500);
         });
     
+});
+
+app.post('/api/v1/books', (request, response) => {
+    const body = request.body;
+    client.query(`
+    INSERT INTO books (title, author, image_url, description, isbn)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, title, author, image_url, description, isbn`,
+    [body.title, body.author, body.image_url, body.description, body.isbn]
+    )
+        .then(results => response.send(results.rows[0]))
+        .catch(err => {
+            console.error(err);
+            response.sendStatus(500);
+        });
 });
 
 
