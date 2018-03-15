@@ -44,7 +44,6 @@ app.get('/api/v1/books', (request, response) => {
             console.error(error);
             response.sendStatus(500);
         });
-    
 });
 
 app.get('/api/v1/books/:id', (request, response) => {
