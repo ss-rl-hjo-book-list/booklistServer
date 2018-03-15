@@ -22,6 +22,7 @@ const client = require('./db-client');
 
 function ensureAdmin(request, response, next) {
     const token = request.get('token') || request.query.token;
+    console.log(token);
     if(!token) next({ status: 401, message: 'No token found'});
 
     else if(token !== ADMIN_PASSPHRASE) next({ status: 403, message: 'Unauthorized' });
@@ -30,6 +31,7 @@ function ensureAdmin(request, response, next) {
 }
 
 app.get('/api/v1/admin', (request, response) => {
+    console.log('hello');
     ensureAdmin(request, response, err => {
         response.send({ admin: !err });
     });
