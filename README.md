@@ -1,4 +1,4 @@
-# Project Name
+# Book-List
 
 **Authors**: Stephanie Smith, Ryan Lee, Henrique Oliveira
 **Version**: 0.4.0
