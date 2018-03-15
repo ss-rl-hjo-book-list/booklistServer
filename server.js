@@ -82,7 +82,7 @@ app.post('/api/v1/books', (request, response) => {
         });
 });
 
-app.put('/api/v1/books/:id', (request, response, next) => {
+app.put('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
     const body = request.body;
 
     client.query(`
@@ -108,7 +108,7 @@ app.put('/api/v1/books/:id', (request, response, next) => {
         .catch(next);
 });
 
-app.delete('/api/v1/books/:id', (request, response, next) => {
+app.delete('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
     const id = request.params.id;
 
     client.query(`
