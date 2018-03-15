@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
+const ADMIN_PASSPHRASE = process.env.ADMIN_PASSPHRASE;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 const express = require('express');
 const morgan = require('morgan');
@@ -18,6 +20,22 @@ app.use(express.urlencoded({extended: true}));
 
 const client = require('./db-client');
 
+function ensureAdmin(request, response, next) {
+    const token = request.get('token') || request.query.token;
+    console.log(token);
+    if(!token) next({ status: 401, message: 'No token found'});
+
+    else if(token !== ADMIN_PASSPHRASE) next({ status: 403, message: 'Unauthorized' });
+
+    else next();
+}
+
+app.get('/api/v1/admin', (request, response) => {
+    console.log('hello');
+    ensureAdmin(request, response, err => {
+        response.send({ admin: !err });
+    });
+});
 
 app.get('/api/v1/books', (request, response) => {
     client.query(`
@@ -28,7 +46,6 @@ app.get('/api/v1/books', (request, response) => {
             console.error(error);
             response.sendStatus(500);
         });
-    
 });
 
 app.get('/api/v1/books/:id', (request, response) => {
@@ -65,6 +82,59 @@ app.post('/api/v1/books', (request, response) => {
         });
 });
 
+app.put('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
+    const body = request.body;
+
+    client.query(`
+        UPDATE books
+        SET title=$1,
+            author=$2,
+            image_url=$3,
+            description=$4,
+            isbn=$5
+        WHERE id=$6
+        RETURNING id, title, author, image_url, description, isbn;
+    `,
+    [
+        body.title,
+        body.author,
+        body.image_url,
+        body.description,
+        body.isbn,
+        body.id
+    ]
+    )
+        .then(result => response.send(result.rows[0]))
+        .catch(next);
+});
+
+app.delete('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
+    const id = request.params.id;
+
+    client.query(`
+        DELETE FROM books
+        WHERE id=$1;
+    `,
+    [id]
+    )
+        .then(result => response.send({ removed: result.rowCount !== 0 }))
+        .catch(next);
+});
+
+app.get('*', (request, response) => {
+    response.redirect(CLIENT_URL);
+});
+
+// eslint-disable-next-line
+app.use((err, request, response, next) => { 
+    console.log(err);
+    if(err.status) {
+        response.status(err.status).send({ error: err.message });
+    }
+    else {
+        response.sendStatus(500);
+    }
+});
 
 app.listen(PORT, () => {
     console.log('Server running on port', PORT);
