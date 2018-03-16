@@ -5,11 +5,14 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSPHRASE = process.env.ADMIN_PASSPHRASE;
+const GOOGLE_API_URL = process.env.GOOGLE_API_URL;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const CLIENT_URL = process.env.CLIENT_URL;
 
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const sa = require('superagent');
 
 const app = express();
 
@@ -48,6 +51,33 @@ app.get('/api/v1/books', (request, response) => {
         });
 });
 
+app.get('/api/v1/books/find', (request, response, next) => {
+    const search = request.query.search;
+    if(!search) return next({ status:400, message: 'search query must be provided'});
+
+    sa.get(GOOGLE_API_URL)
+        .query({
+            s: search.trim(),
+            apikey: GOOGLE_API_KEY
+        })
+        .then(res => {
+            const body = res.body;
+            const formatted = {
+                total: body.totalItems,
+                books: body.Search.map(book => {
+                    return {
+                        title: book.title,
+                        author: book.authors,
+                        image_url: 'http://books.google.com/books/content?id=c5THDQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
+                        description: book.description,
+                    };
+                })
+            };
+            response.send(formatted);
+        })
+        .catch(next);
+});
+
 app.get('/api/v1/books/:id', (request, response) => {
     const id = request.params.id;
     client.query(`
@@ -81,6 +111,7 @@ app.post('/api/v1/books', (request, response) => {
             response.sendStatus(500);
         });
 });
+
 
 app.put('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
     const body = request.body;
@@ -124,6 +155,7 @@ app.delete('/api/v1/books/:id', ensureAdmin, (request, response, next) => {
 app.get('*', (request, response) => {
     response.redirect(CLIENT_URL);
 });
+
 
 // eslint-disable-next-line
 app.use((err, request, response, next) => { 
