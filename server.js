@@ -40,6 +40,34 @@ app.get('/api/v1/admin', (request, response) => {
     });
 });
 
+app.get('/api/v1/books/find', (request, response, next) => {
+    const search = request.query.q;
+    if(!search) return next({ status:400, message: 'search query must be provided'});
+
+    sa.get(GOOGLE_API_URL)
+        .query({
+            q: search.trim(),
+            apikey: GOOGLE_API_KEY
+        })
+        .then(res => {
+            const body = res.body;
+            const formatted = {
+                total: body.totalItems,
+                books: body.items.map(book =>{
+                    return {
+                        title: book.volumeInfo.title,
+                        author: book.volumeInfo.authors ? book.volumeInfo.authors[0] : null,
+                        isbn: book.volumeInfo.industryIdentifiers[0].identifier,
+                        image_url: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : null,
+                        description: book.volumeInfo.description || null
+                    };
+                })
+            };
+            response.send(formatted);
+        })
+        .catch(next);
+});
+
 app.get('/api/v1/books', (request, response) => {
     client.query(`
     SELECT id, title, author, image_url FROM books;
@@ -51,32 +79,6 @@ app.get('/api/v1/books', (request, response) => {
         });
 });
 
-app.get('/api/v1/books/find', (request, response, next) => {
-    const search = request.query.search;
-    if(!search) return next({ status:400, message: 'search query must be provided'});
-
-    sa.get(GOOGLE_API_URL)
-        .query({
-            s: search.trim(),
-            apikey: GOOGLE_API_KEY
-        })
-        .then(res => {
-            const body = res.body;
-            const formatted = {
-                total: body.totalItems,
-                books: body.Search.map(book => {
-                    return {
-                        title: book.title,
-                        author: book.authors,
-                        image_url: 'http://books.google.com/books/content?id=c5THDQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-                        description: book.description,
-                    };
-                })
-            };
-            response.send(formatted);
-        })
-        .catch(next);
-});
 
 app.get('/api/v1/books/:id', (request, response) => {
     const id = request.params.id;
