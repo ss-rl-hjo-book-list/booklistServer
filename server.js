@@ -52,7 +52,6 @@ app.get('/api/v1/books/find', (request, response, next) => {
         .then(res => {
             const body = res.body;
             const formatted = {
-                total: body.totalItems,
                 books: body.items.map(book =>{
                     return {
                         title: book.volumeInfo.title,
