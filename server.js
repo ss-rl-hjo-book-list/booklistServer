@@ -54,6 +54,7 @@ app.get('/api/v1/books/find', (request, response, next) => {
             const formatted = {
                 books: body.items.map(book =>{
                     return {
+                        id: book.id,
                         title: book.volumeInfo.title,
                         author: book.volumeInfo.authors ? book.volumeInfo.authors[0] : null,
                         isbn: book.volumeInfo.industryIdentifiers[0].identifier,
@@ -66,6 +67,39 @@ app.get('/api/v1/books/find', (request, response, next) => {
         })
         .catch(next);
 });
+
+function insertBook(book) {
+    return client.query(`
+        INSERT INTO books (title, author, image_url, description, isbn)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, title, author, image_url, description, isbn`,
+    [book.title, book.author, book.image_url, book.description, book.isbn]
+    )
+        .then(results => results.rows[0]);
+}
+
+app.put('api/v1/books/google/:id', (request, response, next) => {
+    const id = request.params.id;
+
+    sa.get(GOOGLE_API_URL)
+        .query({
+            id: `/${id}`,
+            apikey: GOOGLE_API_KEY
+        })
+        .then (res => {
+            const book = res.body;
+            return insertBook({
+                title: book.volumeInfo.title,
+                isbn: book.volumeInfo.industryIdentifiers[0].identifier,
+                author: book.volumeInfo.authors ? book.volumeInfo.authors[0] : null,
+                description: book.volumeInfo.description || null,
+                image_url: book.volumeInfo.imageLinks ? book.volumeInfo.imageLinks.thumbnail : null
+            });
+        })
+        .then (result => response.send(result))
+        .catch(next);
+});
+
 
 app.get('/api/v1/books', (request, response) => {
     client.query(`
